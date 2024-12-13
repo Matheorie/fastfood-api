@@ -5,29 +5,30 @@ const jwt = require("jsonwebtoken");
 const router = new Router();
 
 router.post("/login", async (req, res, next) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({
-    where: {
-      email,
-    },
-  });
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ where: { email } });
 
-  if (!user) return res.sendStatus(401);
-  if (user.password !== password) {
-    return res.sendStatus(401);
+    if (!user) return res.sendStatus(401);
+    
+    // Utiliser la méthode de vérification bcrypt
+    const validPassword = await user.verifierMotDePasse(password);
+    if (!validPassword) return res.sendStatus(401);
+
+    const token = jwt.sign(
+      {
+        id: user.id,
+        name: user.nom,
+        role: user.role
+      },
+      process.env.JWT_SECRET
+    );
+
+    res.json({ token });
+  } catch (error) {
+    console.error("Erreur login:", error);
+    res.status(500).json({ message: "Erreur serveur" });
   }
-
-  const token = jwt.sign(
-    {
-      id: user.id,
-      name: user.name,
-    },
-    process.env.JWT_SECRET ?? "MyVeryVeryStrongSecret&IL1k31T"
-  );
-
-  res.json({
-    token,
-  });
 });
 
 module.exports = router;

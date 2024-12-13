@@ -1,37 +1,289 @@
-### GET users
-GET http://localhost:3000/users
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNzMwODI2NTU5fQ.U4b3KbZVxUx5YCvH5otB6ILYYdimspDHptHRzVnPJlQ
+# FastFood API - Requêtes HTTP
+@baseUrl = http://localhost:3000
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTMsIm5hbWUiOiJBZG1pbiBVc2VyIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzM0MDM5OTk0fQ.61AGHhfDbFce2wnpVKcqb3I3st9dqL4Vis_xxrmDQbs
+@clientToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAsIm5hbWUiOiJKb2huIERvZSIsInJvbGUiOiJDTElFTlQiLCJpYXQiOjE3MzQwNDA2OTJ9.Z9pJGIFhRbWJe1NUzlbp0zqgXKooiQlVGlFw6dfCQQI
 
-### POST users
-POST http://localhost:3000/users
+#######################
+### AUTHENTIFICATION ##
+#######################
+
+### Login Client
+POST {{baseUrl}}/login
 Content-Type: application/json
 
 {
-  "name": "John Doe",
-  "email": "j@d.com",
-  "password": "12Az!3456"
+    "email": "j@d.com",
+    "password": "12Az!3456"
 }
 
-### GET a user
-GET http://localhost:3000/users/1
-
-### PATCH a user
-PATCH http://localhost:3000/users/1
+### Login Admin
+POST {{baseUrl}}/login
 Content-Type: application/json
 
 {
-  "name": "Jane Doe"
+    "email": "admin@example.com",
+    "password": "admin123"
 }
 
-### DELETE a user
-DELETE http://localhost:3000/users/2
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNzMwODI2NTU5fQ.U4b3KbZVxUx5YCvH5otB6ILYYdimspDHptHRzVnPJlQ
+#######################
+### UTILISATEURS ######
+#######################
 
-###
-POST http://localhost:3000/login
+### Liste des utilisateurs
+GET {{baseUrl}}/users
+Authorization: Bearer {{adminToken}}
+
+### Obtenir un utilisateur
+GET {{baseUrl}}/users/6
+Authorization: Bearer {{adminToken}}
+
+### Créer un utilisateur (Client)
+POST {{baseUrl}}/users
 Content-Type: application/json
 
 {
-  "email": "j@d.com",
-  "password": "12Az!3456"
+    "nom": "John Doe",
+    "email": "j@d.com",
+    "motDePasse": "12Az!3456",
+    "role": "CLIENT",
+    "dateNaissance": "1990-01-01"
 }
+
+### Créer un utilisateur (Admin)
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+    "nom": "Admin User",
+    "email": "admin@example.com",
+    "motDePasse": "admin123",
+    "role": "ADMIN",
+    "dateNaissance": "1990-01-01"
+}
+
+### Modifier un utilisateur
+PATCH {{baseUrl}}/users/6
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "nom": "Jane Doe"
+}
+
+### Supprimer un utilisateur
+DELETE {{baseUrl}}/users/1
+Authorization: Bearer {{adminToken}}
+
+#######################
+### RESTAURANTS #######
+#######################
+
+### Liste des restaurants
+GET {{baseUrl}}/restaurants
+
+### Obtenir un restaurant
+GET {{baseUrl}}/restaurants/1
+
+### Créer un restaurant
+POST {{baseUrl}}/restaurants
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "nom": "McDonald's",
+    "adresse": "123 rue de la Paix",
+    "telephone": "0123456789",
+    "heureOuverture": "08:00:00",
+    "heureFermeture": "23:00:00",
+    "idGerant": 6
+}
+
+### Modifier un restaurant
+PUT {{baseUrl}}/restaurants/11
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "nom": "McDonald's Updated",
+    "adresse": "123 rue de la Paix",
+    "telephone": "0123456789",
+    "heureOuverture": "09:00:00",
+    "heureFermeture": "22:00:00"
+}
+
+### Supprimer un restaurant
+DELETE {{baseUrl}}/restaurants/11
+Authorization: Bearer {{adminToken}}
+
+#######################
+### PRODUITS #########
+#######################
+
+### Liste des produits
+GET {{baseUrl}}/produits
+
+### Obtenir un produit
+GET {{baseUrl}}/produits/1
+
+### Créer un produit
+POST {{baseUrl}}/produits
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "nom": "Big Mac",
+    "description": "Le burger iconique avec deux steaks hachés",
+    "prix": 8.99,
+    "categorie": "BURGER",
+    "imageUrl": "https://example.com/bigmac.jpg",
+    "allergenes": ["gluten", "sésame", "moutarde"],
+    "tempsPreparation": 10,
+    "restaurants": {
+        "restaurants": [
+            {
+                "idRestaurant": 11,
+                "prix": 8.99,
+                "disponible": true,
+                "stock": 50
+            }
+        ]
+    }
+}
+
+### Modifier un produit
+PUT {{baseUrl}}/produits/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "prix": 9.99,
+    "disponible": false
+}
+
+### Supprimer un produit
+DELETE {{baseUrl}}/produits/1
+Authorization: Bearer {{adminToken}}
+
+#######################
+### MENUS ############
+#######################
+
+### Liste des menus
+GET {{baseUrl}}/menus
+
+### Obtenir un menu
+GET {{baseUrl}}/menus/1
+
+### Créer un menu
+POST {{baseUrl}}/menus
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "nom": "Menu Maxi Best Of",
+    "description": "Menu complet avec burger, boisson et frites",
+    "prix": 12.99,
+    "categorie": "MAXI",
+    "imageUrl": "https://example.com/menu-maxi.jpg",
+    "composition": {
+        "compositions": [
+            {
+                "categorie": "BURGER",
+                "options": [
+                    {"idProduit": 1, "obligatoire": true}
+                ]
+            },
+            {
+                "categorie": "BOISSON",
+                "options": [
+                    {"idProduit": 2, "obligatoire": true}
+                ]
+            },
+            {
+                "categorie": "ACCOMPAGNEMENT",
+                "options": [
+                    {"idProduit": 3, "obligatoire": true}
+                ]
+            }
+        ]
+    },
+    "restaurants": {
+        "restaurants": [
+            {
+                "idRestaurant": 1,
+                "prix": 12.99,
+                "disponible": true
+            }
+        ]
+    }
+}
+
+### Modifier un menu
+PUT {{baseUrl}}/menus/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "prix": 13.99,
+    "disponible": false
+}
+
+### Supprimer un menu
+DELETE {{baseUrl}}/menus/1
+Authorization: Bearer {{adminToken}}
+
+#######################
+### COMMANDES ########
+#######################
+
+### Liste des commandes
+GET {{baseUrl}}/commandes
+Authorization: Bearer {{adminToken}}
+
+### Obtenir une commande
+GET {{baseUrl}}/commandes/1
+Authorization: Bearer {{adminToken}}
+
+### Créer une commande
+POST {{baseUrl}}/commandes
+Authorization: Bearer {{clientToken}}
+Content-Type: application/json
+
+{
+    "idRestaurant": 11,
+    "typeCommande": "SUR_PLACE",
+    "contenu": {
+        "menus": [
+            {
+                "idMenu": 1,
+                "quantite": 2,
+                "prix": 12.99,
+                "selections": {
+                    "burger": 1,
+                    "boisson": 2,
+                    "accompagnement": 3
+                }
+            }
+        ],
+        "produitsIndividuels": [
+            {
+                "idProduit": 2,
+                "quantite": 1,
+                "prix": 3.99
+            }
+        ]
+    }
+}
+
+### Mettre à jour le statut d'une commande
+PATCH {{baseUrl}}/commandes/1/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "statut": "EN_PREPARATION"
+}
+
+### Annuler une commande
+POST {{baseUrl}}/commandes/1/cancel
+Authorization: Bearer {{clientToken}}
