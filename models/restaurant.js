@@ -1,3 +1,4 @@
+// models/restaurant.js
 const { Model, DataTypes } = require('sequelize');
 const connection = require('./db');
 
@@ -7,6 +8,9 @@ Restaurant.init({
   nom: {
     type: DataTypes.STRING,
     allowNull: false,
+    unique: {
+      msg: "Un restaurant avec ce nom existe déjà."
+    },
     validate: {
       notEmpty: {
         msg: "Le nom ne peut pas être vide"
@@ -16,6 +20,9 @@ Restaurant.init({
   adresse: {
     type: DataTypes.STRING,
     allowNull: false,
+    unique: {
+      msg: "Un restaurant avec cette adresse existe déjà."
+    },
     validate: {
       notEmpty: {
         msg: "L'adresse ne peut pas être vide"
@@ -25,6 +32,9 @@ Restaurant.init({
   telephone: {
     type: DataTypes.STRING,
     allowNull: false,
+    unique: {
+      msg: "Un restaurant avec ce numéro de téléphone existe déjà."
+    },
     validate: {
       is: {
         args: /^(\+[0-9]{2}|0)[0-9]{9}$/,

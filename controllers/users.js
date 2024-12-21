@@ -1,67 +1,45 @@
-const User = require("../models/user");
+const userService = require("../services/userService");
 
 module.exports = {
-  getAll: async (req, res) => {
+  getAll: async (req, res, next) => {
     try {
-      const users = await User.findAll({
-        attributes: { exclude: ['motDePasse'] } // Ne pas renvoyer les mots de passe
-      });
+      const users = await userService.getAllUsers();
       res.json(users);
     } catch (error) {
-      console.error("Erreur getAll users:", error);
-      res.status(500).json({ message: "Erreur serveur" });
+      next(error);
     }
   },
   create: async (req, res, next) => {
-    res.status(201).json(await User.create(req.body));
-  },
-  getOne: async (req, res, next) => {
-    const user = await User.findByPk(parseInt(req.params.id));
-    if (user) {
-      res.json(user);
-    } else {
-      res.sendStatus(404);
+    try {
+      const user = await userService.createUser(req.body);
+      res.status(201).json(user);
+    } catch (error) {
+      next(error);
     }
   },
-  update: async (req, res) => {
+  getOne: async (req, res, next) => {
     try {
-      // Vérifie d'abord si l'utilisateur existe
-      const user = await User.findByPk(parseInt(req.params.id));
-      if (!user) {
-        return res.status(404).json({ message: "Utilisateur non trouvé" });
-      }
-  
-      // Mise à jour de l'utilisateur
-      const [nbUpdated] = await User.update(req.body, {
-        where: {
-          id: parseInt(req.params.id),
-        },
-      });
-  
-      if (nbUpdated === 0) {
-        return res.status(400).json({ message: "Aucune mise à jour effectuée" });
-      }
-  
-      // Récupère et renvoie l'utilisateur mis à jour
-      const updatedUser = await User.findByPk(parseInt(req.params.id), {
-        attributes: { exclude: ['motDePasse'] } // Exclure le mot de passe de la réponse
-      });
-      
+      const user = await userService.getUserById(parseInt(req.params.id));
+      if (!user) return res.sendStatus(404);
+      res.json(user);
+    } catch (error) {
+      next(error);
+    }
+  },
+  update: async (req, res, next) => {
+    try {
+      const updatedUser = await userService.updateUser(parseInt(req.params.id), req.body);
       res.json(updatedUser);
     } catch (error) {
-      console.error("Erreur lors de la mise à jour:", error);
-      res.status(500).json({ message: "Erreur lors de la mise à jour de l'utilisateur" });
+      next(error);
     }
   },
   delete: async (req, res, next) => {
-    if (req.user.id !== parseInt(req.params.id)) return res.sendStatus(403);
-
-    const nbDeleted = await User.destroy({
-      where: {
-        id: parseInt(req.params.id),
-      },
-    });
-
-    res.sendStatus(nbDeleted ? 204 : 404);
-  },
+    try {
+      await userService.deleteUser(parseInt(req.params.id), req.user);
+      res.sendStatus(204);
+    } catch (error) {
+      next(error);
+    }
+  }
 };

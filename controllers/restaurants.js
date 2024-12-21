@@ -1,90 +1,48 @@
-const Restaurant = require("../models/restaurant");
+const restaurantService = require("../services/restaurantService");
 
 module.exports = {
-  getAll: async (req, res) => {
+  getAll: async (req, res, next) => {
     try {
-      const restaurants = await Restaurant.findAll();
+      const restaurants = await restaurantService.getAll(req.query);
       res.json(restaurants);
     } catch (error) {
-      console.error("Erreur getAll:", error);
-      res.status(500).json({ message: "Erreur lors de la récupération des restaurants" });
+      next(error);
     }
   },
 
-  getOne: async (req, res) => {
+  getOne: async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
-      const restaurant = await Restaurant.findByPk(id);
-      
-      if (!restaurant) {
-        return res.status(404).json({ message: "Restaurant non trouvé" });
-      }
-      
+      const restaurant = await restaurantService.getOne(parseInt(req.params.id));
       res.json(restaurant);
     } catch (error) {
-      console.error("Erreur getOne:", error);
-      res.status(500).json({ message: "Erreur lors de la récupération du restaurant" });
+      next(error);
     }
   },
 
-  create: async (req, res) => {
+  create: async (req, res, next) => {
     try {
-      // Validation des données requises
-      const { nom, adresse, telephone, heureOuverture, heureFermeture, idGerant } = req.body;
-      
-      if (!nom || !adresse || !telephone || !heureOuverture || !heureFermeture || !idGerant) {
-        return res.status(400).json({ message: "Données manquantes" });
-      }
-
-      const restaurant = await Restaurant.create({
-        nom,
-        adresse,
-        telephone,
-        heureOuverture,
-        heureFermeture,
-        statut: req.body.statut || 'FERME',
-        idGerant
-      });
-
+      const restaurant = await restaurantService.create(req.body, req.user);
       res.status(201).json(restaurant);
     } catch (error) {
-      console.error("Erreur create:", error);
-      res.status(400).json({ message: error.message });
+      next(error);
     }
   },
 
-  update: async (req, res) => {
+  update: async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
-      const restaurant = await Restaurant.findByPk(id);
-      
-      if (!restaurant) {
-        return res.status(404).json({ message: "Restaurant non trouvé" });
-      }
-
-      await restaurant.update(req.body);
-      const updatedRestaurant = await Restaurant.findByPk(id);
+      const updatedRestaurant = await restaurantService.update(parseInt(req.params.id), req.body, req.user);
       res.json(updatedRestaurant);
     } catch (error) {
-      console.error("Erreur update:", error);
-      res.status(400).json({ message: error.message });
+      next(error);
     }
   },
 
-  delete: async (req, res) => {
+  delete: async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
-      const restaurant = await Restaurant.findByPk(id);
-      
-      if (!restaurant) {
-        return res.status(404).json({ message: "Restaurant non trouvé" });
-      }
-
-      await restaurant.destroy();
-      res.status(204).send();
+      await restaurantService.delete(parseInt(req.params.id), req.user);
+      res.sendStatus(204);
     } catch (error) {
-      console.error("Erreur delete:", error);
-      res.status(500).json({ message: "Erreur lors de la suppression du restaurant" });
+      next(error);
     }
   }
 };
