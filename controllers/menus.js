@@ -1,117 +1,49 @@
-const Menu = require("../models/menu");
+const menuService = require("../services/menuService");
 
 module.exports = {
-  // Récupérer tous les menus
-  getAll: async (req, res) => {
+  getAll: async (req, res, next) => {
     try {
-      const menus = await Menu.findAll();
+      // Passez req.user || null
+      const menus = await menuService.getAll(req.query, req.user || null);
       res.json(menus);
     } catch (error) {
-      console.error("Erreur getAll menus:", error);
-      res.status(500).json({ message: "Erreur lors de la récupération des menus" });
+      next(error);
     }
   },
 
-  // Récupérer un menu par son ID
-  getOne: async (req, res) => {
+  getOne: async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
-      const menu = await Menu.findByPk(id);
-      
-      if (!menu) {
-        return res.status(404).json({ message: "Menu non trouvé" });
-      }
-      
+      const menu = await menuService.getOne(parseInt(req.params.id), req.user || null);
       res.json(menu);
     } catch (error) {
-      console.error("Erreur getOne menu:", error);
-      res.status(500).json({ message: "Erreur lors de la récupération du menu" });
+      next(error);
     }
   },
 
-  // Créer un nouveau menu
-  create: async (req, res) => {
+  create: async (req, res, next) => {
     try {
-      // Validation des données requises
-      const { nom, prix, categorie, composition } = req.body;
-      
-      if (!nom || !prix || !categorie || !composition) {
-        return res.status(400).json({ message: "Données manquantes" });
-      }
-
-      // Vérification du rôle (seuls ADMIN et GERANT peuvent créer des menus)
-      if (!['ADMIN', 'GERANT'].includes(req.user.role)) {
-        return res.status(403).json({ message: "Non autorisé" });
-      }
-
-      const menu = await Menu.create({
-        nom,
-        description: req.body.description,
-        prix,
-        categorie,
-        imageUrl: req.body.imageUrl,
-        disponible: req.body.disponible !== undefined ? req.body.disponible : true,
-        composition,
-        restaurants: req.body.restaurants || { restaurants: [] }
-      });
-
+      const menu = await menuService.create(req.body, req.user);
       res.status(201).json(menu);
     } catch (error) {
-      console.error("Erreur create menu:", error);
-      if (error.name === 'SequelizeValidationError') {
-        return res.status(400).json({ message: error.message });
-      }
-      res.status(500).json({ message: "Erreur lors de la création du menu" });
+      next(error);
     }
   },
 
-  // Mettre à jour un menu
-  update: async (req, res) => {
+  update: async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
-      const menu = await Menu.findByPk(id);
-      
-      if (!menu) {
-        return res.status(404).json({ message: "Menu non trouvé" });
-      }
-
-      // Vérification du rôle (seuls ADMIN et GERANT peuvent modifier des menus)
-      if (!['ADMIN', 'GERANT'].includes(req.user.role)) {
-        return res.status(403).json({ message: "Non autorisé" });
-      }
-
-      await menu.update(req.body);
-      const updatedMenu = await Menu.findByPk(id);
+      const updatedMenu = await menuService.update(parseInt(req.params.id), req.body, req.user);
       res.json(updatedMenu);
     } catch (error) {
-      console.error("Erreur update menu:", error);
-      if (error.name === 'SequelizeValidationError') {
-        return res.status(400).json({ message: error.message });
-      }
-      res.status(500).json({ message: "Erreur lors de la mise à jour du menu" });
+      next(error);
     }
   },
 
-  // Supprimer un menu
-  delete: async (req, res) => {
+  delete: async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
-      const menu = await Menu.findByPk(id);
-      
-      if (!menu) {
-        return res.status(404).json({ message: "Menu non trouvé" });
-      }
-
-      // Vérification du rôle (seuls ADMIN et GERANT peuvent supprimer des menus)
-      if (!['ADMIN', 'GERANT'].includes(req.user.role)) {
-        return res.status(403).json({ message: "Non autorisé" });
-      }
-
-      await menu.destroy();
-      res.status(204).send();
+      await menuService.delete(parseInt(req.params.id), req.user);
+      res.sendStatus(204);
     } catch (error) {
-      console.error("Erreur delete menu:", error);
-      res.status(500).json({ message: "Erreur lors de la suppression du menu" });
+      next(error);
     }
   }
 };
