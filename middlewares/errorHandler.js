@@ -1,5 +1,5 @@
 module.exports = (err, req, res, next) => {
-  console.error("Erreur globale interceptÃ©e:", err);
+  console.error("Erreur globale interceptée:", err);
   
   const status = err.statusCode || 500;
   const message = err.message || "Erreur interne du serveur";

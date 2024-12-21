@@ -1,289 +1,629 @@
-# FastFood API - Requêtes HTTP
 @baseUrl = http://localhost:3000
-@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTMsIm5hbWUiOiJBZG1pbiBVc2VyIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzM0MDM5OTk0fQ.61AGHhfDbFce2wnpVKcqb3I3st9dqL4Vis_xxrmDQbs
-@clientToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAsIm5hbWUiOiJKb2huIERvZSIsInJvbGUiOiJDTElFTlQiLCJpYXQiOjE3MzQwNDA2OTJ9.Z9pJGIFhRbWJe1NUzlbp0zqgXKooiQlVGlFw6dfCQQI
 
-#######################
-### AUTHENTIFICATION ##
-#######################
+###
+### ---------------------------
+### TEST DE ROUTES PUBLIQUES
+### ---------------------------
+### (Pas besoin d'authentification)
+###
 
-### Login Client
+### Affiche la liste publique des produits
+GET {{baseUrl}}/produits
+
+### Affiche la liste publique des menus
+GET {{baseUrl}}/menus
+
+### Affiche un produit précis (ex: ID 1) sans auth
+GET {{baseUrl}}/produits/1
+
+### Affiche un menu précis (ex: ID 1) sans auth
+GET {{baseUrl}}/menus/1
+
+###
+### ------------------------------
+### AUTHENTIFICATION POUR CHAQUE ROLE
+### ------------------------------
+###
+
+### Login ADMIN (admin@example.com / Admin@1234)
 POST {{baseUrl}}/login
 Content-Type: application/json
 
 {
-    "email": "j@d.com",
-    "password": "12Az!3456"
+  "email": "admin@example.com",
+  "password": "Admin@1234"
 }
 
-### Login Admin
+### Après la réponse, copier le token dans la variable ci-dessous
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IkFkbWluIFVzZXIiLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3MzQ3OTg1NjZ9.fqOiMyM_qXnrABqU3MjPaN1mSOMG3yMg3seR95acpvs
+
+### Login GERANT (gerant@example.com / Gerant@1234)
 POST {{baseUrl}}/login
 Content-Type: application/json
 
 {
-    "email": "admin@example.com",
-    "password": "admin123"
+  "email": "gerant@example.com",
+  "password": "Gerant@1234"
 }
 
-#######################
-### UTILISATEURS ######
-#######################
+### Copier le token
+@gerantToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwibmFtZSI6IkdlcmFudCBVc2VyIiwicm9sZSI6IkdFUkFOVCIsImlhdCI6MTczNDc5ODU4MH0.Dw4ogKnRFIPCuuzZGamO295rP7Eom8KPhUUea2qToFQ
 
-### Liste des utilisateurs
+### Login EMPLOYE (employe@example.com / Employe@1234)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "employe@example.com",
+  "password": "Employe@1234"
+}
+
+### Copier le token
+@employeToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywibmFtZSI6IkVtcGxveWUgVXNlciIsInJvbGUiOiJFTVBMT1lFIiwiaWF0IjoxNzM0Nzk4NjI4fQ.oRWyndmqXOVYJ02nlFhKxP1iiDF-C5_mF2Kf-Lnwl8I
+
+### Login CLIENT (j@d.com / 12Az!3456)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "j@d.com",
+  "password": "12Az!3456"
+}
+
+### Copier le token
+@clientToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwibmFtZSI6IkNsaWVudCBVc2VyIiwicm9sZSI6IkNMSUVOVCIsImlhdCI6MTczNDc5ODY0N30.jlaZoM_HhxqxnwDQ5Hg3f0CxeOngFgX57bgIZaYXHJU
+
+###
+### ------------------------------
+### TESTS SUR LES UTILISATEURS
+### ------------------------------
+###
+
+### Liste des utilisateurs (ADMIN et GERANT uniquement)
 GET {{baseUrl}}/users
 Authorization: Bearer {{adminToken}}
 
-### Obtenir un utilisateur
-GET {{baseUrl}}/users/6
-Authorization: Bearer {{adminToken}}
+### Liste des utilisateurs en tant que GERANT (DEVRAIT RÉUSSIR)
+GET {{baseUrl}}/users
+Authorization: Bearer {{gerantToken}}
 
-### Créer un utilisateur (Client)
+### Liste des utilisateurs en tant que EMPLOYE (DEVRAIT ÉCHOUER 403)
+GET {{baseUrl}}/users
+Authorization: Bearer {{employeToken}}
+
+### Liste des utilisateurs en tant que CLIENT (DEVRAIT ÉCHOUER 403)
+GET {{baseUrl}}/users
+Authorization: Bearer {{clientToken}}
+
+### Créer un nouvel utilisateur (role CLIENT)
 POST {{baseUrl}}/users
 Content-Type: application/json
 
 {
-    "nom": "John Doe",
-    "email": "j@d.com",
-    "motDePasse": "12Az!3456",
-    "role": "CLIENT",
-    "dateNaissance": "1990-01-01"
+  "nom": "Nouveau Client",
+  "email": "clientnouveau@example.com",
+  "motDePasse": "Client2023!",
+  "role": "CLIENT",
+  "dateNaissance": "2020-01-01"
 }
 
-### Créer un utilisateur (Admin)
+### Créer un utilisateur avec un mot de passe trop faible (DEVRAIT ÉCHOUER 400)
 POST {{baseUrl}}/users
 Content-Type: application/json
 
 {
-    "nom": "Admin User",
-    "email": "admin@example.com",
-    "motDePasse": "admin123",
-    "role": "ADMIN",
-    "dateNaissance": "1990-01-01"
+  "nom": "Client Faible",
+  "email": "clientfaible@example.com",
+  "motDePasse": "123",
+  "role": "CLIENT",
+  "dateNaissance": "1990-01-01"
 }
 
-### Modifier un utilisateur
-PATCH {{baseUrl}}/users/6
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
+###
+### ------------------------------
+### TEST SUR LES RESTAURANTS
+### ------------------------------
+###
 
-{
-    "nom": "Jane Doe"
-}
+### Récupérer la liste des restaurants (public), filtrage/tri
+GET {{baseUrl}}/restaurants?statut=OUVERT&sort=nom&order=asc
 
-### Supprimer un utilisateur
-DELETE {{baseUrl}}/users/1
-Authorization: Bearer {{adminToken}}
-
-#######################
-### RESTAURANTS #######
-#######################
-
-### Liste des restaurants
-GET {{baseUrl}}/restaurants
-
-### Obtenir un restaurant
+### Obtenir un restaurant spécifique (public)
 GET {{baseUrl}}/restaurants/1
 
-### Créer un restaurant
+### Créer un restaurant en tant que ADMIN (DEVRAIT RÉUSSIR)
 POST {{baseUrl}}/restaurants
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-    "nom": "McDonald's",
-    "adresse": "123 rue de la Paix",
-    "telephone": "0123456789",
-    "heureOuverture": "08:00:00",
-    "heureFermeture": "23:00:00",
-    "idGerant": 6
+  "nom": "Burger Palace Admin",
+  "adresse": "10 rue du Test",
+  "telephone": "0123455789",
+  "heureOuverture": "08:00:00",
+  "heureFermeture": "23:00:00",
+  "idGerant": 2
 }
 
-### Modifier un restaurant
-PUT {{baseUrl}}/restaurants/11
+### Créer un restaurant avec un nom déjà existant (DEVRAIT ÉCHOUER 400)
+POST {{baseUrl}}/restaurants
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-    "nom": "McDonald's Updated",
-    "adresse": "123 rue de la Paix",
-    "telephone": "0123456789",
-    "heureOuverture": "09:00:00",
-    "heureFermeture": "22:00:00"
+  "nom": "Burger Palace Admin",
+  "adresse": "11 rue du Test",
+  "telephone": "0123456790",
+  "heureOuverture": "09:00:00",
+  "heureFermeture": "22:00:00",
+  "idGerant": 2
 }
 
-### Supprimer un restaurant
-DELETE {{baseUrl}}/restaurants/11
-Authorization: Bearer {{adminToken}}
+### Créer un restaurant en tant que GERANT (DEVRAIT RÉUSSIR)
+POST {{baseUrl}}/restaurants
+Authorization: Bearer {{gerantToken}}
+Content-Type: application/json
 
-#######################
-### PRODUITS #########
-#######################
+{
+  "nom": "Burgr Palace Gerant",
+  "adresse": "13 rue du Test",
+  "telephone": "0123456785",
+  "heureOuverture": "08:00:00",
+  "heureFermeture": "23:00:00",
+  "idGerant": 3
+}
 
-### Liste des produits
-GET {{baseUrl}}/produits
+### Créer un restaurant en tant que CLIENT (DEVRAIT ÉCHOUER 403)
+POST {{baseUrl}}/restaurants
+Authorization: Bearer {{clientToken}}
+Content-Type: application/json
+
+{
+  "nom": "Burger Client",
+  "adresse": "13 rue du Test",
+  "telephone": "0123456791",
+  "heureOuverture": "08:00:00",
+  "heureFermeture": "23:00:00",
+  "idGerant": 2
+}
+
+###
+### ------------------------------
+### TEST SUR LES PRODUITS
+### ------------------------------
+###
+
+### Liste des produits (public, avec filtre/tri)
+GET {{baseUrl}}/produits?sort=prix&order=asc
 
 ### Obtenir un produit
 GET {{baseUrl}}/produits/1
 
-### Créer un produit
+### Créer un produit en tant que GERANT (DEVRAIT RÉUSSIR)
+POST {{baseUrl}}/produits
+Authorization: Bearer {{gerantToken}}
+Content-Type: application/json
+
+{
+  "nom": "Sprite",
+  "description": "Boisson gazeuse",
+  "prix": 3.00,
+  "categorie": "BOISSON",
+  "imageUrl": "https://example.com/sprite.jpg",
+  "allergenes": ["GLUTEN"],
+  "disponible": true,
+  "tempsPreparation": 2,
+  "restaurants": {
+    "restaurants": [
+      {
+        "idRestaurant": 1,
+        "prix": 3.00,
+        "disponible": true,
+        "stock": 100
+      }
+    ]
+  }
+}
+
+### Créer un produit avec le même nom "Sprite" (DEVRAIT ÉCHOUER 400)
 POST {{baseUrl}}/produits
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-    "nom": "Big Mac",
-    "description": "Le burger iconique avec deux steaks hachés",
-    "prix": 8.99,
-    "categorie": "BURGER",
-    "imageUrl": "https://example.com/bigmac.jpg",
-    "allergenes": ["gluten", "sésame", "moutarde"],
-    "tempsPreparation": 10,
-    "restaurants": {
-        "restaurants": [
-            {
-                "idRestaurant": 11,
-                "prix": 8.99,
-                "disponible": true,
-                "stock": 50
-            }
-        ]
-    }
+  "nom": "Sprite",
+  "prix": 3.50,
+  "categorie": "BOISSON",
+  "tempsPreparation": 2,
+  "restaurants": {
+    "restaurants": [
+      {
+        "idRestaurant": 1,
+        "prix": 3.50,
+        "disponible": true,
+        "stock": 50
+      }
+    ]
+  }
 }
 
-### Modifier un produit
-PUT {{baseUrl}}/produits/1
+### Créer un produit en tant que CLIENT (DEVRAIT ÉCHOUER 403)
+POST {{baseUrl}}/produits
+Authorization: Bearer {{clientToken}}
+Content-Type: application/json
+
+{
+  "nom": "Fanta",
+  "prix": 3.00,
+  "categorie": "BOISSON",
+  "tempsPreparation": 2,
+  "restaurants": {
+    "restaurants": [
+      {
+        "idRestaurant": 1,
+        "prix": 3.00,
+        "disponible": true,
+        "stock": 100
+      }
+    ]
+  }
+}
+
+### Créer un produit avec des données incorrectes (DEVRAIT ÉCHOUER 400)
+POST {{baseUrl}}/produits
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-    "prix": 9.99,
-    "disponible": false
+  "nom": "Nouvelle Boisson",
+  "prix": "trois euros",
+  "categorie": "BOISSON",
+  "tempsPreparation": -1,
+  "restaurants": {
+    "restaurants": [
+      {
+        "idRestaurant": 1,
+        "prix": 3.00,
+        "disponible": true,
+        "stock": 100
+      }
+    ]
+  }
 }
 
-### Supprimer un produit
-DELETE {{baseUrl}}/produits/1
-Authorization: Bearer {{adminToken}}
+###
+### ------------------------------
+### TEST SUR LES MENUS
+### ------------------------------
+###
 
-#######################
-### MENUS ############
-#######################
-
-### Liste des menus
-GET {{baseUrl}}/menus
+### Liste des menus (public, avec filtres/tri)
+GET {{baseUrl}}/menus?sort=prix&order=desc
 
 ### Obtenir un menu
 GET {{baseUrl}}/menus/1
 
-### Créer un menu
+### Créer un menu en tant que ADMIN (DEVRAIT RÉUSSIR)
 POST {{baseUrl}}/menus
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-    "nom": "Menu Maxi Best Of",
-    "description": "Menu complet avec burger, boisson et frites",
-    "prix": 12.99,
-    "categorie": "MAXI",
-    "imageUrl": "https://example.com/menu-maxi.jpg",
-    "composition": {
-        "compositions": [
-            {
-                "categorie": "BURGER",
-                "options": [
-                    {"idProduit": 1, "obligatoire": true}
-                ]
-            },
-            {
-                "categorie": "BOISSON",
-                "options": [
-                    {"idProduit": 2, "obligatoire": true}
-                ]
-            },
-            {
-                "categorie": "ACCOMPAGNEMENT",
-                "options": [
-                    {"idProduit": 3, "obligatoire": true}
-                ]
-            }
+  "nom": "Menu Maxi Deluxe",
+  "description": "Menu avec burger, boisson, frites deluxe",
+  "prix": 14.99,
+  "imageUrl": "https://example.com/menu-maxi-deluxe.jpg",
+  "disponible": true,
+  "composition": {
+    "compositions": [
+      {
+        "categorie": "BURGER",
+        "options": [
+          {"idProduit": 1, "obligatoire": true}
         ]
-    },
-    "restaurants": {
-        "restaurants": [
-            {
-                "idRestaurant": 1,
-                "prix": 12.99,
-                "disponible": true
-            }
+      },
+      {
+        "categorie": "ACCOMPAGNEMENT",
+        "options": [
+          {"idProduit": 3, "obligatoire": true}
         ]
-    }
+      },
+      {
+        "categorie": "DESSERT",
+        "options": [
+          {"idProduit": 4, "obligatoire": true}
+        ]
+      }
+    ]
+  },
+  "restaurants": {
+    "restaurants": [
+      {
+        "idRestaurant": 1,
+        "prix": 14.99,
+        "disponible": true
+      }
+    ]
+  }
 }
 
-### Modifier un menu
-PUT {{baseUrl}}/menus/1
+### Créer un menu avec un nom déjà existant (DEVRAIT ÉCHOUER 400)
+POST {{baseUrl}}/menus
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-    "prix": 13.99,
-    "disponible": false
+  "nom": "Menu Maxi Deluxe",
+  "description": "Duplicate Menu",
+  "prix": 15.99,
+  "categorie": "MAXI",
+  "imageUrl": "https://example.com/menu-duplicate.jpg",
+  "composition": {
+    "compositions": [
+      {
+        "categorie": "BURGER",
+        "options": [
+          {"idProduit": 1, "obligatoire": true}
+        ]
+      }
+    ]
+  },
+  "restaurants": {
+    "restaurants": [
+      {
+        "idRestaurant": 1,
+        "prix": 15.99,
+        "disponible": true
+      }
+    ]
+  }
 }
 
-### Supprimer un menu
-DELETE {{baseUrl}}/menus/1
+### Créer un menu en tant que GERANT (DEVRAIT RÉUSSIR)
+POST {{baseUrl}}/menus
+Authorization: Bearer {{gerantToken}}
+Content-Type: application/json
+
+{
+  "nom": "Menu Enfant Gourmand",
+  "description": "Petit menu pour enfants",
+  "prix": 9.99,
+  "imageUrl": "https://example.com/menu-enfant.jpg",
+  "disponible": true,
+  "composition": {
+    "compositions": [
+      {
+        "categorie": "BURGER",
+        "options": [
+          {"idProduit": 1, "obligatoire": true}
+        ]
+      },
+      {
+        "categorie": "ACCOMPAGNEMENT",
+        "options": [
+          {"idProduit": 3, "obligatoire": true}
+        ]
+      }
+    ]
+  },
+  "restaurants": {
+    "restaurants": [
+      {
+        "idRestaurant": 1,
+        "prix": 9.99,
+        "disponible": true
+      }
+    ]
+  }
+}
+
+### Créer un menu en tant que CLIENT (DEVRAIT ÉCHOUER 403)
+POST {{baseUrl}}/menus
+Authorization: Bearer {{clientToken}}
+Content-Type: application/json
+
+{
+  "nom": "Menu Client Test",
+  "description": "Tentative par un client",
+  "prix": 10.00,
+  "imageUrl": "https://example.com/menu-test.jpg",
+  "disponible": true,
+  "composition": {
+    "compositions": [
+      {
+        "categorie": "BURGER",
+        "options": [
+          {"idProduit": 1, "obligatoire": true}
+        ]
+      }
+    ]
+  },
+  "restaurants": {
+    "restaurants": [
+      {
+        "idRestaurant": 1,
+        "prix": 10.00,
+        "disponible": true
+      }
+    ]
+  }
+}
+
+### Créer un menu avec des catégories incorrectes (DEVRAIT ÉCHOUER 400)
+POST {{baseUrl}}/menus
 Authorization: Bearer {{adminToken}}
+Content-Type: application/json
 
-#######################
-### COMMANDES ########
-#######################
+{
+  "nom": "Menu Incorrect",
+  "description": "Menu avec catégorie erronée",
+  "prix": 11.99,
+  "imageUrl": "https://example.com/menu-incorrect.jpg",
+  "disponible": true,
+  "composition": {
+    "compositions": [
+      {
+        "categorie": "BOISSON",
+        "options": [
+          {"idProduit": 1, "obligatoire": true}
+        ]
+      }
+    ]
+  },
+  "restaurants": {
+    "restaurants": [
+      {
+        "idRestaurant": 1,
+        "prix": 11.99,
+        "disponible": true
+      }
+    ]
+  }
+}
 
-### Liste des commandes
+###
+### ------------------------------
+### TEST SUR LES COMMANDES
+### ------------------------------
+###
+
+### Liste des commandes (ADMIN voit tout)
 GET {{baseUrl}}/commandes
 Authorization: Bearer {{adminToken}}
 
-### Obtenir une commande
+### Liste des commandes (GERANT voit celles de son restaurant)
+GET {{baseUrl}}/commandes
+Authorization: Bearer {{gerantToken}}
+
+### Liste des commandes (EMPLOYE voit celles de son restaurant)
+GET {{baseUrl}}/commandes
+Authorization: Bearer {{employeToken}}
+
+### Liste des commandes (CLIENT voit uniquement les siennes)
+GET {{baseUrl}}/commandes
+Authorization: Bearer {{clientToken}}
+
+### Obtenir une commande spécifique (ADMIN)
 GET {{baseUrl}}/commandes/1
 Authorization: Bearer {{adminToken}}
 
-### Créer une commande
+### Obtenir une commande spécifique (CLIENT, s'il est le propriétaire)
+GET {{baseUrl}}/commandes/1
+Authorization: Bearer {{clientToken}}
+
+### Obtenir une commande spécifique (CLIENT, s'il n'est pas le propriétaire, DEVRAIT ÉCHOUER 403)
+GET {{baseUrl}}/commandes/2
+Authorization: Bearer {{clientToken}}
+
+### Créer une commande en tant que CLIENT avec code promo, menus et produits (DEVRAIT RÉUSSIR)
 POST {{baseUrl}}/commandes
 Authorization: Bearer {{clientToken}}
 Content-Type: application/json
 
 {
-    "idRestaurant": 11,
-    "typeCommande": "SUR_PLACE",
-    "contenu": {
-        "menus": [
-            {
-                "idMenu": 1,
-                "quantite": 2,
-                "prix": 12.99,
-                "selections": {
-                    "burger": 1,
-                    "boisson": 2,
-                    "accompagnement": 3
-                }
-            }
-        ],
-        "produitsIndividuels": [
-            {
-                "idProduit": 2,
-                "quantite": 1,
-                "prix": 3.99
-            }
-        ]
-    }
+  "idRestaurant": 1,
+  "typeCommande": "SUR_PLACE",
+  "codePromo": "REDUC10",
+  "contenu": {
+    "menus": [
+      {
+        "idMenu": 1,
+        "quantite": 2
+      }
+    ],
+    "produitsIndividuels": [
+      {
+        "idProduit": 3,
+        "quantite": 2
+      }
+    ]
+  }
 }
 
-### Mettre à jour le statut d'une commande
+### Créer une commande sans contenu (DEVRAIT ÉCHOUER 400)
+POST {{baseUrl}}/commandes
+Authorization: Bearer {{clientToken}}
+Content-Type: application/json
+
+{
+  "idRestaurant": 1,
+  "typeCommande": "SUR_PLACE"
+}
+
+### Créer une commande avec un code promo invalide (DEVRAIT RÉUSSIR mais sans réduction)
+POST {{baseUrl}}/commandes
+Authorization: Bearer {{clientToken}}
+Content-Type: application/json
+
+{
+  "idRestaurant": 1,
+  "typeCommande": "SUR_PLACE",
+  "codePromo": "INVALID",
+  "contenu": {
+    "menus": [
+      {
+        "idMenu": 1,
+        "quantite": 1
+      }
+    ]
+  }
+}
+
+### Créer une commande avec un produit inexistant (ID 999) (DEVRAIT ÉCHOUER 404)
+POST {{baseUrl}}/commandes
+Authorization: Bearer {{clientToken}}
+Content-Type: application/json
+
+{
+  "idRestaurant": 1,
+  "typeCommande": "SUR_PLACE",
+  "contenu": {
+    "produitsIndividuels": [
+      {
+        "idProduit": 999,
+        "quantite": 1
+      }
+    ]
+  }
+}
+
+### Mettre à jour le statut d'une commande (ADMIN -> EN_PREPARATION)
 PATCH {{baseUrl}}/commandes/1/status
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-    "statut": "EN_PREPARATION"
+  "statut": "EN_PREPARATION"
 }
 
-### Annuler une commande
+### Mettre à jour le statut d'une commande (EMPLOYE -> PRETE)
+PATCH {{baseUrl}}/commandes/1/status
+Authorization: Bearer {{employeToken}}
+Content-Type: application/json
+
+{
+  "statut": "PRETE"
+}
+
+### Mettre à jour le statut d'une commande avec une transition invalide (DEVRAIT ÉCHOUER 400)
+PATCH {{baseUrl}}/commandes/1/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "statut": "NON_EXISTANT"
+}
+
+### Annuler une commande par le CLIENT (DEVRAIT RÉUSSIR si statut autorisé)
 POST {{baseUrl}}/commandes/1/cancel
 Authorization: Bearer {{clientToken}}
+
+### Annuler une commande déjà livrée (DEVRAIT ÉCHOUER 400)
+POST {{baseUrl}}/commandes/1/cancel
+Authorization: Bearer {{clientToken}}
+
+###
+### ------------------------------
+### FIN DES TESTS
+### ------------------------------
+###
