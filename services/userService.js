@@ -1,8 +1,25 @@
 const User = require("../models/user");
 
 module.exports = {
-  getAllUsers: async () => {
-    return User.findAll({ attributes: { exclude: ['motDePasse'] } });
+  getAllUsers: async (currentUser) => {
+    if (currentUser.role === "ADMIN") {
+      return User.findAll({ attributes: { exclude: ["motDePasse"] } });
+    }
+
+    if (currentUser.role === "GERANT") {
+      const restaurantGere = await currentUser.getRestaurantGere();
+      if (!restaurantGere) {
+        // Cas où le gérant n’a pas de restaurant ou association mal définie
+        return [];
+      }
+
+      return User.findAll({
+        where: { idRestaurant: restaurantGere.id },
+        attributes: { exclude: ["motDePasse"] }
+      });
+    }
+
+    return [];
   },
   getUserById: async (id) => {
     return User.findByPk(id, { attributes: { exclude: ['motDePasse'] } });
