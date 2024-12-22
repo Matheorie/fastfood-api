@@ -1,5 +1,3 @@
-# compose.yml (exemple)
-
 services:
   server:
     image: node:alpine
