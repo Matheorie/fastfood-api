@@ -1,6 +1,4 @@
 const Produit = require("../models/produit");
-const Restaurant = require("../models/restaurant");
-const { Sequelize, Op } = require("sequelize");
 const { getUserRestaurantId } = require("../utils/roleAccess");
 const RestaurantModel = require("../models/restaurant");
 
