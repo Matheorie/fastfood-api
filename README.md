@@ -2,7 +2,7 @@
 
 ## Description
 
-FastFood API est une solution complète pour gérer les opérations d'un restaurant rapide. Elle inclut la gestion des restaurants, des utilisateurs, des produits, des menus et des commandes. Avec une sécurité robuste basée sur JWT, cette API RESTful optimise les flux de travail pour les équipes, améliore la précision des commandes et garantit une expérience client de qualité.
+FastFood API est une application backend RESTful qui permet de gérer efficacement toutes les opérations d'un restaurant rapide. L'API offre des fonctionnalités pour créer, modifier et consulter les restaurants, gérer les utilisateurs avec différents rôles (ADMIN, GERANT, EMPLOYE, CLIENT), maintenir un catalogue de produits actualisés, construire des menus personnalisés en combinant plusieurs produits, et superviser le cycle complet des commandes clients (création, suivi, annulation). La sécurité des données est assurée par l'utilisation de tokens JWT pour contrôler l'accès aux différentes routes. L'objectif est d'optimiser les workflows internes tout en garantissant une expérience client fluide et sans erreurs.
 
 ## Membres de l'équipe
 
