@@ -3,7 +3,6 @@ const menuService = require("../services/menuService");
 module.exports = {
   getAll: async (req, res, next) => {
     try {
-      // Passez req.user || null
       const menus = await menuService.getAll(req.query, req.user || null);
       res.json(menus);
     } catch (error) {
@@ -31,7 +30,11 @@ module.exports = {
 
   update: async (req, res, next) => {
     try {
-      const updatedMenu = await menuService.update(parseInt(req.params.id), req.body, req.user);
+      const updatedMenu = await menuService.update(
+        parseInt(req.params.id),
+        req.body,
+        req.user
+      );
       res.json(updatedMenu);
     } catch (error) {
       next(error);

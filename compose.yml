@@ -1,3 +1,5 @@
+# compose.yml (exemple)
+
 services:
   server:
     image: node:alpine
@@ -9,13 +11,20 @@ services:
       - 3000:3000
     environment:
       PORT: 3000
-      DATABASE_NAME: app
+      DATABASE_NAME: fastfood_db
       DATABASE_USER: root
       DATABASE_PASSWORD: password
       DATABASE_HOST: db
       DATABASE_PORT: 3306
       DATABASE_DIALECT: mysql
-      JWT_SECRET: secret
+      JWT_SECRET: secret_66
+      MAIL_HOST: sandbox.smtp.mailtrap.io
+      MAIL_PORT: 2525
+      MAIL_USER: user123
+      MAIL_PASS: pass123
+
+    depends_on:
+      - db
 
   db:
     image: mysql:latest
@@ -23,7 +32,9 @@ services:
       - db-data:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: app
+      MYSQL_DATABASE: fastfood_db
+    ports:
+      - "3307:3306"
 
 volumes:
   db-data:

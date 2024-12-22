@@ -259,8 +259,6 @@ module.exports = {
       err.statusCode = 403;
       throw err;
     }
-
-    // GERANT/EMPLOYE/ADMIN peuvent annuler seulement s'ils ont accès à ce restaurant
     if (['GERANT', 'EMPLOYE'].includes(currentUser.role)) {
       const userRestaurantId = await getUserRestaurantId(currentUser);
       if (commande.idRestaurant !== userRestaurantId) {

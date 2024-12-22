@@ -7,7 +7,7 @@ const router = new Router();
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    if(!email || !password) {
+    if (!email || !password) {
       return res.status(400).json({ error: true, message: "Email et mot de passe requis" });
     }
 
@@ -21,7 +21,7 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: true, message: "Email ou mot de passe incorrect." });
     }
 
-    if(!user.active) {
+    if (!user.active) {
       return res.status(403).json({ error: true, message: "Compte désactivé" });
     }
 
@@ -31,7 +31,8 @@ router.post("/login", async (req, res) => {
         name: user.nom,
         role: user.role
       },
-      process.env.JWT_SECRET
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
     );
 
     res.json({ token });

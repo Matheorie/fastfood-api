@@ -63,7 +63,7 @@ User.init({
     type: DataTypes.ENUM('ADMIN', 'GERANT', 'EMPLOYE', 'CLIENT'),
     defaultValue: 'CLIENT'
   },
-  idRestaurant: { // Ajout du champ
+  idRestaurant: {
     type: DataTypes.INTEGER,
     allowNull: true,
     references: {

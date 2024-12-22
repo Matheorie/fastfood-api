@@ -1,3 +1,5 @@
+// services/menuService.js
+
 const Menu = require("../models/menu");
 const Produit = require("../models/produit");
 const RestaurantModel = require("../models/restaurant");
@@ -21,8 +23,8 @@ module.exports = {
 
     let menus = await Menu.findAll({ where, order });
 
-    // Si pas d'utilisateur => pas de filtrage
     if (!currentUser) {
+      // Pas d'utilisateur => pas de filtrage par restaurant
       return menus;
     }
 
@@ -44,8 +46,8 @@ module.exports = {
       throw err;
     }
 
-    // Si pas d’utilisateur => route publique
     if (!currentUser) {
+      // Route publique => on retourne le menu tel quel
       return menu;
     }
 
@@ -61,6 +63,7 @@ module.exports = {
 
     return menu;
   },
+
   create: async (data, currentUser) => {
     if (!['ADMIN', 'GERANT'].includes(currentUser.role)) {
       const err = new Error("Non autorisé");
@@ -76,7 +79,7 @@ module.exports = {
       throw err;
     }
 
-    // Vérifier que l'utilisateur a bien indiqué au moins un restaurant
+    // Vérifier qu'au moins un restaurant est spécifié
     if (!data.restaurants 
       || !data.restaurants.restaurants 
       || data.restaurants.restaurants.length === 0) 
@@ -101,16 +104,76 @@ module.exports = {
       }
     }
 
-    // Récupérer l'idRestaurant principal pour vérifier la composition.
-    // Ici on suppose qu'on utilise le premier de la liste
-    const idRestaurant = data.restaurants.restaurants[0].idRestaurant;
+    // Vérifier la composition (produits, catégories, stock) si nécessaire
+    if (data.composition) {
+      await module.exports.verifyMenuComposition(
+        data.composition,
+        data.restaurants.restaurants[0].idRestaurant
+      );
+    }
 
-    // Vérifier la composition (produits, catégories, stock)
-    await module.exports.verifyMenuComposition(data.composition, idRestaurant);
-
-    // Enfin, créer le menu
     return Menu.create(data);
   },
+
+  /**
+   * NOUVELLE METHODE : Mise à jour d'un menu existant
+   */
+  update: async (id, data, currentUser) => {
+    // Seuls ADMIN ou GERANT peuvent modifier
+    if (!['ADMIN', 'GERANT'].includes(currentUser.role)) {
+      const err = new Error("Non autorisé");
+      err.statusCode = 403;
+      throw err;
+    }
+
+    // Récupérer le menu
+    const menu = await Menu.findByPk(id);
+    if (!menu) {
+      const err = new Error("Menu non trouvé");
+      err.statusCode = 404;
+      throw err;
+    }
+
+    // Si c'est un GERANT, vérifier l'accès (restaurants)
+    if (currentUser.role === 'GERANT') {
+      const userRestaurantId = await getUserRestaurantId(currentUser);
+
+      // On vérifie si le menu est vendu dans son resto
+      // (si le gérant veut modifier le menu dans un resto qu’il ne gère pas => refus)
+      const restArray = menu.restaurants?.restaurants || [];
+      const found = restArray.some(r => r.idRestaurant === userRestaurantId);
+      if (!found) {
+        const err = new Error("Vous n'avez pas accès à ce menu (autre restaurant).");
+        err.statusCode = 403;
+        throw err;
+      }
+    }
+
+    // Vérifier unicité du nouveau nom si on en change
+    if (data.nom && data.nom !== menu.nom) {
+      const existingMenu = await Menu.findOne({ where: { nom: data.nom } });
+      if (existingMenu) {
+        const err = new Error("Un menu avec ce nom existe déjà.");
+        err.statusCode = 400;
+        throw err;
+      }
+    }
+
+    // Si on modifie la composition, vérifier à nouveau la validité
+    if (data.composition && data.restaurants && data.restaurants.restaurants) {
+      await module.exports.verifyMenuComposition(
+        data.composition,
+        data.restaurants.restaurants[0].idRestaurant
+      );
+    }
+
+    // Mettre à jour le menu
+    await menu.update(data);
+
+    // On retourne le menu mis à jour
+    return menu;
+  },
+
   delete: async (id, currentUser) => {
     const menu = await Menu.findByPk(id);
     if (!menu) {
@@ -128,6 +191,7 @@ module.exports = {
     await menu.destroy();
     return true;
   },
+
   verifyMenuComposition: async (composition, idRestaurant) => {
     if (!composition || !composition.compositions || !Array.isArray(composition.compositions)) {
       const err = new Error("Format composition invalide");
@@ -140,15 +204,12 @@ module.exports = {
       throw err;
     }
 
-    // Boucle sur chaque catégorie de la composition
     for (const c of composition.compositions) {
       if (!c.categorie || !c.options || !Array.isArray(c.options)) {
         const err = new Error("La structure de la composition est invalide.");
         err.statusCode = 400;
         throw err;
       }
-
-      // Boucle sur les produits référencés
       for (const option of c.options) {
         const produit = await Produit.findByPk(option.idProduit);
         if (!produit || !produit.disponible) {
@@ -156,21 +217,15 @@ module.exports = {
           err.statusCode = 400;
           throw err;
         }
-
-        // Sécuriser si produit.restaurants est null
         if (!produit.restaurants) {
           produit.restaurants = { restaurants: [] };
         }
-
-        // Vérifier que le produit est disponible dans le restaurant ciblé
         const restInfo = produit.restaurants.restaurants.find(r => r.idRestaurant === idRestaurant);
         if (!restInfo || !restInfo.disponible || restInfo.stock < 1) {
           const err = new Error(`Produit ${produit.nom} indisponible ou stock insuffisant dans le restaurant ${idRestaurant}.`);
           err.statusCode = 400;
           throw err;
         }
-
-        // Vérifier la correspondance de la catégorie
         if (produit.categorie !== c.categorie) {
           const err = new Error(
             `Le produit ${produit.nom} (catégorie ${produit.categorie}) ne correspond pas à la catégorie requise ${c.categorie}.`

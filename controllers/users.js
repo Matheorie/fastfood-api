@@ -3,7 +3,8 @@ const userService = require("../services/userService");
 module.exports = {
   getAll: async (req, res, next) => {
     try {
-      const users = await userService.getAllUsers();
+      // Passer l’utilisateur courant
+      const users = await userService.getAllUsers(req.user);
       res.json(users);
     } catch (error) {
       next(error);
