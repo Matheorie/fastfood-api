@@ -1,5 +1,3 @@
-// services/menuService.js
-
 const Menu = require("../models/menu");
 const Produit = require("../models/produit");
 const RestaurantModel = require("../models/restaurant");
